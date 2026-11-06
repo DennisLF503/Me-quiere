@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Me quiere o no me quiere?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
+<style>
+:root{
+  --sky:#d6ecf7; --grass:#9fd08a; --ink:#3b1e3a; --petal:#fffdf6; --petal-edge:#e9dfc9;
+  --core:#f2b705; --stem:#3f7d3b; --love:#e0457b; --nope:#5a4a8a; --card:#ffffffcc;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky:#1b2440; --grass:#27442b; --ink:#f6e7f3; --petal:#fff8e8; --petal-edge:#cdbf9f;
+    --core:#f5c132; --stem:#6bb865; --love:#ff7aa6; --nope:#a99be0; --card:#2a2147cc; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#1b2440; --grass:#27442b; --ink:#f6e7f3; --petal:#fff8e8; --petal-edge:#cdbf9f;
+  --core:#f5c132; --stem:#6bb865; --love:#ff7aa6; --nope:#a99be0; --card:#2a2147cc; color-scheme: dark;
+}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{
+  margin:0;min-height:100%;display:flex;flex-direction:column;align-items:center;
+  font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:linear-gradient(var(--sky) 0 72%, var(--grass) 72% 100%);background-color:var(--sky);
+  -webkit-tap-highlight-color:transparent;
+}
+main{width:100%;max-width:480px;padding:16px 20px 28px;display:flex;flex-direction:column;align-items:center;gap:10px}
+h1{font-size:1.5rem;font-weight:600;margin:4px 0 0;text-align:center}
+.name{display:flex;gap:8px;align-items:center;font-size:1rem}
+.name input{
+  font:inherit;color:inherit;background:var(--card);border:2px solid var(--petal-edge);
+  border-radius:999px;padding:8px 16px;width:12rem;text-align:center;
+}
+.name input:focus-visible,button:focus-visible,.petal:focus-visible{outline:3px solid var(--love);outline-offset:3px}
+svg{width:100%;max-width:340px;height:auto;touch-action:manipulation;overflow:visible}
+.petal{cursor:pointer;outline:none}
+.petal ellipse{fill:var(--petal);stroke:var(--petal-edge);stroke-width:2;transition:fill .15s}
+.petal:hover ellipse{fill:#fff}
+.petal:focus-visible ellipse{stroke:var(--love);stroke-width:4}
+.say{
+  min-height:4.2rem;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:2rem;font-weight:600;line-height:1.1;
+}
+.say.love{color:var(--love)} .say.nope{color:var(--nope)}
+.say.final{font-size:1.75rem}
+.say .pop{display:inline-block;animation:pop .28s ease-out}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.count{font-size:.95rem;opacity:.8;min-height:1.3em}
+button.main{
+  font:inherit;font-weight:600;color:#fff;background:var(--love);border:0;border-radius:999px;
+  padding:12px 28px;font-size:1.05rem;cursor:pointer;
+}
+button.main:active{transform:scale(.97)}
+@media (prefers-reduced-motion: reduce){.say .pop{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>¿Me quiere o no me quiere?</h1>
+  <label class="name">¿De quién?
+    <input id="who" type="text" maxlength="24" placeholder="Opcional" autocomplete="off">
+  </label>
+
+  <svg id="flower" viewBox="0 0 300 380" role="group" aria-label="Margarita">
+    <path d="M150 150 C146 230 156 290 150 372" fill="none" stroke="var(--stem)" stroke-width="9" stroke-linecap="round"/>
+    <path d="M152 290 C190 270 222 276 238 252 C206 244 170 256 152 290Z" fill="var(--stem)"/>
+    <path d="M148 322 C114 306 86 312 70 290 C102 282 134 292 148 322Z" fill="var(--stem)"/>
+    <g id="petals"></g>
+    <circle cx="150" cy="140" r="30" fill="var(--core)"/>
+    <circle cx="142" cy="132" r="6" fill="#fff" opacity=".35"/>
+  </svg>
+
+  <div class="say" id="say" aria-live="polite">Toca un pétalo</div>
+  <div class="count" id="count"></div>
+  <button class="main" id="go" type="button">Quitar un pétalo</button>
+</main>
+
+<script>
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  var CX = 150, CY = 140;
+  var petalsG = document.getElementById("petals");
+  var say = document.getElementById("say");
+  var countEl = document.getElementById("count");
+  var go = document.getElementById("go");
+  var who = document.getElementById("who");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var left = [], plucked = 0, total = 0, over = false;
+
+  function build(){
+    petalsG.innerHTML = "";
+    left = []; plucked = 0; over = false;
+    total = 9 + Math.floor(Math.random() * 13); // 9 a 21 pétalos
+    for (var i = 0; i < total; i++){
+      var a = (360 / total) * i;
+      var fall = document.createElementNS(NS, "g");
+      var rot = document.createElementNS(NS, "g");
+      rot.setAttribute("transform", "rotate(" + a + " " + CX + " " + CY + ")");
+      rot.setAttribute("class", "petal");
+      rot.setAttribute("role", "button");
+      rot.setAttribute("tabindex", "0");
+      rot.setAttribute("aria-label", "Quitar pétalo");
+      var w = Math.max(9, Math.min(17, 300 / total));
+      var e = document.createElementNS(NS, "ellipse");
+      e.setAttribute("cx", CX); e.setAttribute("cy", CY - 62);
+      e.setAttribute("rx", w); e.setAttribute("ry", 40);
+      rot.appendChild(e); fall.appendChild(rot); petalsG.appendChild(fall);
+      (function(f, r){
+        r.addEventListener("click", function(){ pluck(f); });
+        r.addEventListener("keydown", function(ev){
+          if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); pluck(f); }
+        });
+      })(fall, rot);
+      left.push(fall);
+    }
+    say.className = "say"; say.textContent = "Toca un pétalo";
+    countEl.textContent = total + " pétalos";
+    go.textContent = "Quitar un pétalo";
+  }
+
+  function pluck(g){
+    if (over) return;
+    var idx = left.indexOf(g);
+    if (idx < 0) return;
+    left.splice(idx, 1);
+    plucked++;
+    var loves = plucked % 2 === 1;
+    if (!reduce){
+      var dx = (Math.random() - .5) * 140, dy = 220 + Math.random() * 120, r = (Math.random() - .5) * 360;
+      g.style.transformBox = "fill-box"; g.style.transformOrigin = "center";
+      var an = g.animate([
+        { transform: "translate(0,0) rotate(0deg)", opacity: 1 },
+        { transform: "translate(" + dx + "px," + dy + "px) rotate(" + r + "deg)", opacity: 0 }
+      ], { duration: 900, easing: "ease-in", fill: "forwards" });
+      an.onfinish = function(){ g.remove(); };
+    } else { g.remove(); }
+
+    if (left.length === 0){ finish(loves); return; }
+    say.className = "say " + (loves ? "love" : "nope");
+    say.innerHTML = '<span class="pop"></span>';
+    say.firstChild.textContent = loves ? "Me quiere" : "No me quiere";
+    countEl.textContent = left.length === 1 ? "Queda 1 pétalo" : "Quedan " + left.length + " pétalos";
+  }
+
+  function finish(loves){
+    over = true;
+    var n = who.value.trim();
+    var msg;
+    if (loves) msg = n ? n + " sí te quiere 💛" : "¡Sí te quiere! 💛";
+    else msg = n ? n + " no te quiere… esta vez 🥀" : "No te quiere… esta vez 🥀";
+    say.className = "say final " + (loves ? "love" : "nope");
+    say.innerHTML = '<span class="pop"></span>';
+    say.firstChild.textContent = msg;
+    countEl.textContent = "Sin pétalos";
+    go.textContent = "Probar con otra flor";
+  }
+
+  go.addEventListener("click", function(){
+    if (over) build();
+    else if (left.length) pluck(left[Math.floor(Math.random() * left.length)]);
+  });
+
+  build();
+})();
+</script>
+</body>
+</html>

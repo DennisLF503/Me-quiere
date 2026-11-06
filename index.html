@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>¿Me quiere o no me quiere?</title>
+<meta name="theme-color" content="#d6ecf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b2440" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap">
 <style>
 :root{
@@ -22,41 +24,64 @@
   --core:#f5c132; --stem:#6bb865; --love:#ff7aa6; --nope:#a99be0; --card:#2a2147cc; color-scheme: dark;
 }
 *{box-sizing:border-box}
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{
-  margin:0;min-height:100%;display:flex;flex-direction:column;align-items:center;
+  margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
   font-family:"Fredoka",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
   background:linear-gradient(var(--sky) 0 72%, var(--grass) 72% 100%);background-color:var(--sky);
   -webkit-tap-highlight-color:transparent;
 }
-main{width:100%;max-width:480px;padding:16px 20px 28px;display:flex;flex-direction:column;align-items:center;gap:10px}
-h1{font-size:1.5rem;font-weight:600;margin:4px 0 0;text-align:center}
-.name{display:flex;gap:8px;align-items:center;font-size:1rem}
+main{
+  width:100%;max-width:480px;flex:1 0 auto;
+  padding:14px 16px calc(20px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.4vh,12px);
+}
+h1{font-size:clamp(1.2rem,5.5vw,1.5rem);font-weight:600;margin:4px 0 0;text-align:center}
+.name{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;font-size:1rem}
 .name input{
-  font:inherit;color:inherit;background:var(--card);border:2px solid var(--petal-edge);
-  border-radius:999px;padding:8px 16px;width:12rem;text-align:center;
+  font:inherit;font-size:16px;color:inherit;background:var(--card);border:2px solid var(--petal-edge);
+  border-radius:999px;padding:8px 16px;width:min(12rem,100%);min-width:0;text-align:center;
 }
 .name input:focus-visible,button:focus-visible,.petal:focus-visible{outline:3px solid var(--love);outline-offset:3px}
-svg{width:100%;max-width:340px;height:auto;touch-action:manipulation;overflow:visible}
+.stage{
+  flex:1 1 auto;min-height:110px;width:100%;
+  display:flex;align-items:center;justify-content:center;
+}
+.stage svg{
+  width:100%;height:100%;max-width:min(340px,100%);
+  touch-action:manipulation;overflow:visible;
+}
 .petal{cursor:pointer;outline:none}
 .petal ellipse{fill:var(--petal);stroke:var(--petal-edge);stroke-width:2;transition:fill .15s}
-.petal:hover ellipse{fill:#fff}
+@media (hover:hover){.petal:hover ellipse{fill:#fff}}
 .petal:focus-visible ellipse{stroke:var(--love);stroke-width:4}
 .say{
-  min-height:4.2rem;display:flex;align-items:center;justify-content:center;text-align:center;
-  font-size:2rem;font-weight:600;line-height:1.1;
+  min-height:clamp(3.2rem,9vh,4.2rem);display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:clamp(1.5rem,7vw,2rem);font-weight:600;line-height:1.15;padding:0 4px;overflow-wrap:anywhere;
 }
 .say.love{color:var(--love)} .say.nope{color:var(--nope)}
-.say.final{font-size:1.75rem}
+.say.final{font-size:clamp(1.35rem,6vw,1.75rem)}
 .say .pop{display:inline-block;animation:pop .28s ease-out}
 @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-.count{font-size:.95rem;opacity:.8;min-height:1.3em}
+.count{font-size:.95rem;opacity:.8;min-height:1.3em;text-align:center}
 button.main{
   font:inherit;font-weight:600;color:#fff;background:var(--love);border:0;border-radius:999px;
-  padding:12px 28px;font-size:1.05rem;cursor:pointer;
+  padding:12px 28px;min-height:48px;font-size:1.05rem;cursor:pointer;touch-action:manipulation;
 }
 button.main:active{transform:scale(.97)}
+/* Pantallas bajas (celular en horizontal): compactar para que quepa todo */
+@media (max-height:540px){
+  main{padding-top:8px;gap:5px}
+  h1{font-size:1.15rem;margin-top:0}
+  .name{font-size:.95rem}
+  .name input{padding:6px 14px}
+  .stage{min-height:80px}
+  .say{min-height:2.6rem;font-size:1.35rem}
+  .say.final{font-size:1.2rem}
+  .count{font-size:.85rem}
+  button.main{padding:10px 22px;font-size:1rem;min-height:44px}
+}
 @media (prefers-reduced-motion: reduce){.say .pop{animation:none}}
 </style>
 </head>
@@ -64,17 +89,19 @@ button.main:active{transform:scale(.97)}
 <main>
   <h1>¿Me quiere o no me quiere?</h1>
   <label class="name">¿De quién?
-    <input id="who" type="text" maxlength="24" placeholder="Opcional" autocomplete="off">
+    <input id="who" type="text" maxlength="24" placeholder="Opcional" autocomplete="off" enterkeyhint="done">
   </label>
 
-  <svg id="flower" viewBox="0 0 300 380" role="group" aria-label="Margarita">
-    <path d="M150 150 C146 230 156 290 150 372" fill="none" stroke="var(--stem)" stroke-width="9" stroke-linecap="round"/>
-    <path d="M152 290 C190 270 222 276 238 252 C206 244 170 256 152 290Z" fill="var(--stem)"/>
-    <path d="M148 322 C114 306 86 312 70 290 C102 282 134 292 148 322Z" fill="var(--stem)"/>
-    <g id="petals"></g>
-    <circle cx="150" cy="140" r="30" fill="var(--core)"/>
-    <circle cx="142" cy="132" r="6" fill="#fff" opacity=".35"/>
-  </svg>
+  <div class="stage">
+    <svg id="flower" viewBox="0 0 300 380" role="group" aria-label="Margarita" preserveAspectRatio="xMidYMid meet">
+      <path d="M150 150 C146 230 156 290 150 372" fill="none" stroke="var(--stem)" stroke-width="9" stroke-linecap="round"/>
+      <path d="M152 290 C190 270 222 276 238 252 C206 244 170 256 152 290Z" fill="var(--stem)"/>
+      <path d="M148 322 C114 306 86 312 70 290 C102 282 134 292 148 322Z" fill="var(--stem)"/>
+      <g id="petals"></g>
+      <circle cx="150" cy="140" r="30" fill="var(--core)"/>
+      <circle cx="142" cy="132" r="6" fill="#fff" opacity=".35"/>
+    </svg>
+  </div>
 
   <div class="say" id="say" aria-live="polite">Toca un pétalo</div>
   <div class="count" id="count"></div>
@@ -106,7 +133,7 @@ button.main:active{transform:scale(.97)}
       rot.setAttribute("role", "button");
       rot.setAttribute("tabindex", "0");
       rot.setAttribute("aria-label", "Quitar pétalo");
-      var w = Math.max(9, Math.min(17, 300 / total));
+      var w = Math.max(11, Math.min(18, 320 / total));
       var e = document.createElementNS(NS, "ellipse");
       e.setAttribute("cx", CX); e.setAttribute("cy", CY - 62);
       e.setAttribute("rx", w); e.setAttribute("ry", 40);
